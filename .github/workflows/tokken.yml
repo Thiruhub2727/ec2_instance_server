@@ -1,23 +1,21 @@
-name: Upload Secret to GitHub
+name: GitHub Authentication
 
 on:
   workflow_dispatch:
 
 jobs:
-  set-secret:
+  auth-job:
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ secrets.GH_PAT }}  # GitHub Personal Access Token with admin permissions
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Authenticate with GitHub CLI
         run: |
-          echo "$GH_TOKEN" | gh auth login --with-token
-          gh auth status
+          # Directly provide the token in the script
+          echo "hsdvfh79w4riuw734r9wvg34of34" | gh auth login --with-token
 
-      - name: Set GitHub Repository Secret
+      - name: Verify authentication
         run: |
-          echo "hsdvfh79w4riuw734r9wvg34of34" | gh secret set TOKEN --repo OWNER/REPO
-
-      - name: Verify Secret
-        run: gh secret list --repo OWNER/REPO
+          gh auth status
