@@ -1,53 +1,30 @@
-name: Auto Regenerate Terraform Cloud Token
+name: Terraform CI/CD
 
 on:
-  schedule:
-    - cron: '0 0 1 * *'  # Run once a month on the 1st day
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
-  regenerate-token:
+  terraform:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Fetch New Terraform Cloud Token
-        id: fetch_token
-        run: |
-          # Replace these with actual values or environment variables for authentication
-          TFE_USER="your_username"  # Replace with your Terraform Cloud Username
-          TFE_PASSWORD="your_password"  # Replace with your Terraform Cloud password or use an API key
-
-          # Make an API request to regenerate the Terraform Cloud token
-          NEW_TFE_TOKEN=$(curl -X POST https://app.terraform.io/api/v2/tokens \
-            -H "Content-Type: application/json" \
-            -d '{
-              "username": "'"$TFE_USER"'",
-              "password": "'"$TFE_PASSWORD"'"
-            }' | jq -r '.token')
-
-          echo "NEW_TFE_TOKEN=$NEW_TFE_TOKEN" >> $GITHUB_ENV
-
-      - name: Update GitHub Secret with New Terraform Cloud Token
-        run: |
-          curl -X PUT \
-            -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
-            -H "Accept: application/vnd.github+json" \
-            -d '{"encrypted_value": "'"${{ env.NEW_TFE_TOKEN }}"'"}' \
-            "https://api.github.com/repos/${{ github.repository }}/actions/secrets/TFE_API_TOKEN"
-
-      - name: Terraform Setup
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.0
 
-      - name: Run Terraform Init
+      - name: Initialize Terraform
         run: terraform init
+        working-directory: ./terraform  # Ensure this matches your directory structure
+        env:
+          TF_TOKEN_app_terraform_io: ${{ secrets.TFE_API_TOKEN }}
 
       - name: Run Terraform Plan
         run: terraform plan
-
-      - name: Run Terraform Apply
-        run: terraform apply -auto-approve
+        working-directory: ./terraform
