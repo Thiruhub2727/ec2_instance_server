@@ -14,6 +14,9 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Verify Directory Structure
+        run: ls -R  # Debugging step to check if Terraform files exist
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
@@ -21,7 +24,7 @@ jobs:
 
       - name: Initialize Terraform
         run: terraform init
-        working-directory: ./terraform  # Ensure this matches your directory structure
+        working-directory: ./terraform  # Ensure this matches your repository structure
         env:
           TF_TOKEN_app_terraform_io: ${{ secrets.TFE_API_TOKEN }}
 
